@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌸 芭蕾娃娃英文聽寫 🌸</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Nunito', 'Noto Sans TC', sans-serif;
+            background-color: #fdf2f8; /* pink-50 */
+            background-image: radial-gradient(#fce7f3 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
+
+        .btn-magic {
+            background: linear-gradient(135deg, #a78bfa, #ec4899);
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-magic:active {
+            transform: scale(0.95);
+        }
+
+        .btn-primary {
+            background-color: #f472b6;
+            box-shadow: 0 6px 0 #db2777;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn-primary:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 #db2777;
+        }
+
+        .doll-container {
+            position: relative;
+            width: 100%;
+            max-width: 350px;
+            margin: 0 auto;
+        }
+
+        /* 芭蕾娃娃配件預設隱藏 */
+        .acc { display: none; transition: opacity 0.5s ease-in-out; }
+        .acc.active { display: block; animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .floating { animation: float 3s ease-in-out infinite; }
+
+        .star-fly {
+            position: fixed;
+            font-size: 2rem;
+            pointer-events: none;
+            z-index: 50;
+            animation: flyToTop 1s ease-in-out forwards;
+        }
+
+        @keyframes flyToTop {
+            0% { transform: scale(1) translateY(0); opacity: 1; }
+            100% { transform: scale(0.5) translateY(-200px); opacity: 0; }
+        }
+
+        /* 自訂捲軸 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #fce7f3; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #f472b6; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-gray-800 min-h-screen flex flex-col items-center py-6 px-4">
+
+    <!-- 提示框 Modal -->
+    <div id="alertModal" class="fixed inset-0 bg-black bg-opacity-40 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full text-center shadow-2xl transform transition-all scale-95">
+            <h3 id="alertTitle" class="text-2xl font-bold text-pink-600 mb-2">提示</h3>
+            <p id="alertMessage" class="text-lg text-gray-600 mb-6"></p>
+            <button onclick="closeAlert()" class="btn-primary text-white font-bold py-3 px-8 rounded-full text-xl w-full">知道囉！</button>
+        </div>
+    </div>
+
+    <!-- 獲得配件 Modal -->
+    <div id="unlockModal" class="fixed inset-0 bg-pink-900 bg-opacity-70 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border-4 border-pink-400">
+            <div class="text-6xl mb-4 floating">🎉</div>
+            <h3 class="text-3xl font-bold text-pink-600 mb-2">哇！太棒了！</h3>
+            <p class="text-xl text-gray-700 mb-4">收集滿 20 顆星星，解鎖了新配件：</p>
+            <div id="unlockedItemName" class="text-2xl font-black text-purple-600 mb-6 bg-purple-100 py-3 rounded-full"></div>
+            <button onclick="closeUnlockModal()" class="btn-primary text-white font-bold py-3 px-8 rounded-full text-xl w-full">太開心了！</button>
+        </div>
+    </div>
+
+    <!-- View 1: 登入畫面 -->
+    <div id="view-login" class="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 mt-10 border-4 border-pink-200">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-black text-pink-500 mb-2">🌸 芭蕾娃娃 🌸</h1>
+            <h2 class="text-2xl font-bold text-purple-500">英文聽寫練習</h2>
+        </div>
+        <div class="space-y-6 text-center">
+            <div class="text-6xl floating mb-4">👧🩰</div>
+            <div>
+                <label class="block text-xl font-bold text-gray-700 mb-2">請輸入你的名字：</label>
+                <input type="text" id="loginName" class="w-full text-center text-2xl p-4 border-4 border-pink-200 rounded-2xl focus:outline-none focus:border-pink-500 transition" placeholder="例如：小美">
+            </div>
+            <button onclick="login()" class="btn-primary w-full text-white font-black text-2xl py-4 rounded-full mt-4">開始遊戲！</button>
+        </div>
+    </div>
+
+    <!-- View 2: 主畫面 (Dashboard) -->
+    <div id="view-dashboard" class="w-full max-w-4xl hidden flex-col md:flex-row gap-6">
+        
+        <!-- 左側面板：選單與設定 -->
+        <div class="flex-1 bg-white rounded-3xl shadow-xl p-6 border-4 border-pink-200 flex flex-col">
+            <div class="flex justify-between items-center border-b-4 border-pink-100 pb-4 mb-6">
+                <h2 class="text-3xl font-black text-pink-600">哈囉，<span id="dashName"></span>！</h2>
+                <button onclick="logout()" class="text-gray-400 hover:text-pink-500 font-bold transition">更換玩家</button>
+            </div>
+
+            <!-- 星星計分板 -->
+            <div class="bg-yellow-50 rounded-2xl p-4 flex items-center justify-between mb-6 border-2 border-yellow-200 shadow-sm">
+                <span class="text-xl font-bold text-yellow-700">我的星星 ⭐</span>
+                <span id="dashStars" class="text-3xl font-black text-yellow-500">0</span>
+            </div>
+
+            <!-- 單字庫設定區 -->
+            <div class="bg-blue-50 rounded-2xl p-5 mb-6 border-2 border-blue-200">
+                <h3 class="text-xl font-bold text-blue-800 mb-3">📚 1. 系統單字庫</h3>
+                <p class="text-gray-600 mb-3 text-lg">系統已為您內建 <span id="wordCount" class="font-black text-blue-600 text-2xl">0</span> 個必備英文單字！</p>
+                <div class="w-full text-center bg-blue-200 text-blue-800 font-bold py-2 px-4 rounded-xl cursor-default">
+                    隨時可以開始練習囉 ✨
+                </div>
+            </div>
+
+            <!-- 練習範圍設定 -->
+            <div class="bg-pink-50 rounded-2xl p-5 mb-6 border-2 border-pink-200 flex-grow">
+                <h3 class="text-xl font-bold text-pink-800 mb-3">🎯 2. 開始練習</h3>
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="font-bold text-gray-600">編號：</span>
+                    <input type="number" id="startId" class="w-20 p-2 rounded-xl border-2 border-pink-200 text-center text-lg font-bold" value="1" min="1">
+                    <span class="font-bold text-gray-600">到</span>
+                    <input type="number" id="endId" class="w-20 p-2 rounded-xl border-2 border-pink-200 text-center text-lg font-bold" value="10" min="1">
+                </div>
+                <button onclick="preparePractice()" class="btn-primary w-full text-white font-black text-xl py-3 rounded-full">進入聽寫模式！</button>
+            </div>
+            
+            <p class="text-center text-sm text-gray-400">💡 每答對1題可得1顆星，集滿20顆星解鎖配件喔！</p>
+        </div>
+
+        <!-- 右側面板：芭蕾娃娃展示區 -->
+        <div class="flex-1 bg-white rounded-3xl shadow-xl p-6 border-4 border-purple-200 flex flex-col items-center">
+            <h3 class="text-2xl font-black text-purple-600 mb-2">🎀 我的芭蕾娃娃</h3>
+            <div class="text-sm font-bold text-purple-400 mb-4 bg-purple-50 py-1 px-4 rounded-full">
+                收集進度：<span id="collectionCount">0</span>/20 件配件
+            </div>
+            
+            <!-- SVG 娃娃容器 -->
+            <div class="doll-container bg-gradient-to-b from-purple-50 to-pink-100 rounded-3xl overflow-hidden shadow-inner p-2 h-[450px]" id="svgDollContainer">
+                <!-- SVG 會由 JS 動態注入 -->
+            </div>
+            
+            <button onclick="showCollectionRoom()" class="mt-4 bg-purple-100 text-purple-700 font-bold py-2 px-6 rounded-full hover:bg-purple-200 transition">
+                查看配件收藏櫃 🧳
+            </button>
+        </div>
+    </div>
+
+    <!-- 收藏櫃 Modal -->
+    <div id="collectionModal" class="fixed inset-0 bg-white z-40 hidden flex-col">
+        <div class="p-6 bg-purple-100 flex justify-between items-center shadow-md">
+            <h2 class="text-3xl font-black text-purple-800">🧳 芭蕾配件收藏櫃</h2>
+            <button onclick="closeCollectionRoom()" class="text-2xl font-bold bg-white text-purple-600 w-12 h-12 rounded-full shadow-md hover:bg-purple-50">X</button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 md:p-12">
+            <div id="collectionGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 max-w-5xl mx-auto">
+                <!-- 收藏品項目將由 JS 產生 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- View 3: 聽寫練習畫面 -->
+    <div id="view-practice" class="w-full max-w-5xl hidden flex-col md:flex-row gap-6">
+        
+        <!-- 左側：題目區 -->
+        <div class="flex-1 bg-white rounded-3xl shadow-xl p-6 md:p-10 border-4 border-pink-300 flex flex-col relative">
+            <button onclick="exitPractice()" class="absolute top-4 left-4 text-gray-400 hover:text-red-500 font-bold text-lg">✖ 退出練習</button>
+            <div class="absolute top-4 right-4 bg-yellow-100 border-2 border-yellow-300 text-yellow-600 font-bold py-1 px-4 rounded-full text-lg">
+                ⭐ <span id="practiceStars">0</span>
+            </div>
+
+            <div class="text-center mt-10 mb-2">
+                <span id="practiceProgress" class="text-pink-400 font-bold text-lg bg-pink-50 py-1 px-4 rounded-full">第 1 / 10 題</span>
+            </div>
+            
+            <div class="flex-1 flex flex-col items-center justify-center py-8">
+                <!-- 中文提示 -->
+                <h2 id="questionChinese" class="text-5xl md:text-6xl font-black text-gray-800 mb-8 text-center drop-shadow-sm">蘋果</h2>
+                
+                <!-- 播放聲音按鈕 -->
+                <button onclick="playCurrentWord()" class="bg-blue-100 hover:bg-blue-200 text-blue-600 font-bold text-2xl py-3 px-8 rounded-full mb-8 flex items-center gap-2 transition shadow-sm border-2 border-blue-200">
+                    🔊 聽發音
+                </button>
+
+                <!-- 輸入框 -->
+                <input type="text" id="answerInput" class="w-full max-w-sm text-center text-4xl p-4 border-4 border-pink-300 rounded-3xl focus:outline-none focus:border-pink-500 transition mb-4 shadow-inner text-pink-700 font-bold lowercase tracking-wider" placeholder="輸入英文..." autocomplete="off">
+                
+                <!-- 提示文字區 -->
+                <div id="hintMessage" class="h-8 text-lg font-bold text-red-500 mb-6 tracking-widest"></div>
+
+                <!-- 按鈕區 -->
+                <div class="flex gap-4 w-full max-w-sm">
+                    <button onclick="checkAnswer()" class="btn-primary flex-1 text-white font-black text-2xl py-4 rounded-2xl">送出</button>
+                    <button id="magicBtn" onclick="useMagic()" class="btn-magic flex-1 text-white font-black text-xl py-4 rounded-2xl flex flex-col items-center justify-center leading-tight">
+                        <span>🪄</span>
+                        <span class="text-sm">魔法提示</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側：迷你娃娃區 -->
+        <div class="hidden md:flex w-64 bg-pink-50 rounded-3xl shadow-lg border-4 border-pink-200 flex-col items-center p-4">
+            <h4 class="font-bold text-pink-400 mb-2 text-center">加油！繼續收集星星⭐</h4>
+            <div class="w-full flex-1 relative overflow-hidden rounded-2xl bg-white shadow-inner flex items-center justify-center">
+                <div id="miniDollContainer" class="transform scale-75 origin-top mt-4">
+                    <!-- 縮小的娃娃複製 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View 4: 完成結算畫面 -->
+    <div id="view-finish" class="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 border-4 border-yellow-300 text-center hidden mt-10">
+        <h1 class="text-5xl font-black text-yellow-500 mb-4 floating">🏆</h1>
+        <h2 class="text-4xl font-black text-pink-600 mb-6">練習完成！</h2>
+        
+        <div class="bg-yellow-50 rounded-2xl p-6 mb-8 border-2 border-yellow-200">
+            <p class="text-xl text-gray-600 font-bold mb-2">本次獲得星星</p>
+            <div class="text-5xl font-black text-yellow-500 flex justify-center items-center gap-2">
+                ⭐ +<span id="finishStars">0</span>
+            </div>
+        </div>
+
+        <p class="text-lg text-gray-500 font-bold mb-8">芭蕾娃娃為你感到驕傲！</p>
+        <button onclick="returnToDashboard()" class="btn-primary w-full text-white font-black text-2xl py-4 rounded-full">回到主畫面</button>
+    </div>
+
+
+<script>
+/**
+ * 芭蕾娃娃英文聽寫 App 核心邏輯
+ */
+
+// --- 資料庫結構與常數 ---
+const STORAGE_KEY = 'ballet_dictation_users';
+
+// ==========================================
+// 🚨 單字庫修改區 🚨
+// 請將你準備好的 400 個單字覆蓋到這裡面。
+// 注意：不要刪掉最前方的反引號 (`) 和最後方的反引號 (`)！
+// ==========================================
+const BUILT_IN_CSV = `編號,英文單字,中文解釋
+1,afraid,害怕的
+2,afternoon,下午
+3,agree,同意
+4,airplane,飛機
+5,all,全部
+6,almost,幾乎
+7,always,總是
+8,angry,生氣的
+9,animal,動物
+10,answer,答案、回答
+11,ant,螞蟻
+12,arm,手臂
+13,ask,問
+14,baby,嬰兒
+15,bag,袋子
+16,bakery,麵包店
+17,banana,香蕉
+18,bank,銀行
+19,baseball,棒球
+20,basketball,籃球
+21,bathroom,浴室
+22,beach,海灘
+23,bear,熊
+24,beautiful,美麗的
+25,bedroom,臥室
+26,beef,牛肉
+27,believe,相信
+28,belt,腰帶、帶子
+29,birthday,生日
+30,bite,咬、啃
+31,black,黑色
+32,blackboard,黑板
+33,blind,瞎的、盲的
+34,blue,藍色
+35,boat,船、小船
+36,bookstore,書店
+37,boss,老板
+38,bottle,瓶子
+39,bowl,碗
+40,breakfast,早餐
+41,bridge,橋樑
+42,brother,兄弟
+43,brown,棕色、咖啡色
+44,brush,刷、刷子
+45,bus,公車
+46,businessman,商人
+47,busy,忙、忙碌
+48,butter,奶油
+49,buy,買
+50,cake,蛋糕
+51,camera,相機
+52,candy,糖果
+53,card,卡片
+54,careful,小心的、仔細的
+55,cat,貓
+56,cell phone,手機
+57,chair,椅子
+58,chalk,粉筆
+59,cheap,便宜的
+60,cheat,欺騙、作弊
+61,cheese,乳酪
+62,chicken,雞肉
+63,chocolate,巧克力
+64,chopsticks,筷子
+65,Christmas,聖誕節
+66,church,教堂
+67,circle,圓、圓圈
+68,city,城市
+69,classmate,同學
+70,classroom,教室
+71,clean,乾淨的
+72,climb,爬、攀爬
+73,clothes,衣服
+74,cloudy,多雲
+75,coat,大衣
+76,coffee,咖啡
+77,cold,冷的
+78,collect,收集
+79,color,顏色
+80,come,來
+81,computer,電腦
+82,convenient,便利的
+83,cook,煮、烹調、廚師
+84,cookie,餅乾
+85,cool,涼爽的
+86,Copy,影印、拷貝
+87,couch,長沙發、睡椅
+88,count,數數、計算
+89,country,鄉村、國家
+90,crazy,瘋狂的
+91,cry,哭泣
+92,cup,杯子
+93,cute,可愛的
+94,dance,跳舞
+95,dangerous,危險的
+96,dark,黑暗的
+97,date,日期
+98,daughter,女兒
+99,decide,決定
+100,delicious,美味的
+101,department store,百貨公司
+102,desk,書桌、桌子
+103,dictionary,字典
+104,different,不同的
+105,dinner,晚餐
+106,dirty,骯髒
+107,dish,盤子
+108,doctor,醫生
+109,dodgeball,躲避球
+110,doll,洋娃娃
+111,dollar,元
+112,door,門
+113,Double Tenth Day,雙十節
+114,dozen,一打
+115,dream,夢想、作夢
+116,dress,洋裝
+117,drink,喝
+118,driver,司機
+119,dry,乾燥的、乾的
+120,ear(s),耳朵
+121,eat,吃
+122,elephant,大象
+123,eleven,十一
+124,elf,小精靈
+125,e-mail,電子郵件
+126,English,英文、英語
+127,eraser,橡皮擦、擦子
+128,evening,傍晚、晚上
+129,excellent,傑出的、優秀的
+130,excited,刺激的、興奮的
+131,expensive,昂貴的
+132,eye(s),眼睛
+133,face,臉
+134,factory,工廠
+135,family,家庭、家人
+136,fan,電風扇
+137,farmer,農夫
+138,fast,快的
+139,Father's Day,父親節
+140,favorite,最愛的
+141,fax,傳真
+142,feel,感覺
+143,finally,最後、終於
+144,finger,手指
+145,fish,魚
+146,fisherman,漁夫
+147,five,五
+148,flower,花
+149,food,食物
+150,foreigner,外國人
+151,fork,叉子
+152,four,四
+153,Friday,星期五
+154,friend,朋友
+155,fruit,水果
+156,giraffe,長頸鹿
+157,go,去
+158,goodbye,再見
+159,grandma,祖母
+160,grandpa,祖父
+161,great,美好的、偉大的
+162,green,綠色
+163,guess,猜
+164,garbage,垃圾
+165,garden,花園
+166,gift,禮物
+167,glass,玻璃杯
+168,glove,手套
+169,goat,山羊
+170,grass,草
+171,gray,灰色
+172,ground,地面
+173,hamburger,漢堡
+174,hand(s),手
+175,head,頭
+176,help,幫助
+177,her,她的
+178,habit,習慣
+179,Halloween,萬聖節
+180,healthy,健康的
+181,history,歷史
+182,holiday,假日
+183,honest,誠實的、正直的
+184,horse,馬
+185,hospital,醫院
+186,hot dog,熱狗
+187,hotel,旅館
+188,hundred,百
+189,hurt,受傷、危害
+190,his,他的
+191,homework,家庭作業
+192,hot,熱的
+193,hungry,飢餓的
+194,ice cream,冰淇淋
+195,important,重要的
+196,Internet,網際網路
+197,island,島嶼
+198,jacket,夾克
+199,jeans,牛仔褲
+200,jog,慢跑
+201,jump,跳躍
+202,juice,果汁
+203,kick,踢
+204,knee,膝蓋
+205,knife,刀子
+206,kitchen,廚房
+207,kite,風箏
+208,lake,湖泊
+209,late,遲到
+210,leg,腿
+211,like,喜歡、像
+212,lion,獅子
+213,living room,客廳(起居室)
+214,lunch,午餐
+215,laugh,笑
+216,lazy,懶惰的
+217,left,左邊
+218,library,圖書館
+219,listen,聽
+220,lonely,孤獨的、單獨的
+221,lucky,幸運的
+222,many,很多
+223,marker,麥克筆、白板筆、彩色筆
+224,math,數學
+225,milk,牛奶
+226,Monday,星期一
+227,monkey,猴子
+228,morning,早上
+229,mouse,老鼠
+230,mouth,嘴巴
+231,music,音樂
+232,machine,機器
+233,medicine,藥
+234,menu,菜單
+235,minute,分鐘
+236,mistake,錯誤
+237,Moon Festival,中秋節
+238,Mother's Day,母親節
+239,motorcycle,摩托車
+240,mountain,山、山脈
+241,movie,電影
+242,museum,博物館
+243,neck,頸部、脖子
+244,New Year's Day,新年(元日)
+245,noodle,麵條
+246,north,北方、北方的
+247,name,名字
+248,new,新的
+249,night,夜晚
+250,noodles,麵條
+251,nose,鼻子
+252,number,號碼
+253,nurse,護士
+254,office,辦公室
+255,old,老的、舊的
+256,open,打開
+257,orange,柳橙、橘色的
+258,page,"頁,頁數"
+259,pants,褲子
+260,parents,雙親
+261,pet,寵物
+262,picnic,郊遊、野餐
+263,picture,圖畫
+264,playground,操場、遊樂場
+265,police station,警察局
+266,popcorn,爆玉米花
+267,popular,受歡迎的
+268,pork,豬肉
+269,post office,郵局
+270,problem,問題、困難
+271,pull,拉
+272,push,推
+273,park,公園
+274,pencil case,鉛筆盒
+275,piano,鋼琴
+276,pink,粉紅色
+277,pizza,比薩
+278,play,玩
+279,please,請、拜託
+280,police officer,警察
+281,purple,紫色
+282,question,問題
+283,quick,快的、快速的
+284,quiet,安靜的、安靜
+285,quiz,小考
+286,radio,收音機
+287,rainbow,彩虹
+288,restaurant,餐廳
+289,right,右邊
+290,river,河流
+291,road,路
+292,run,跑
+293,rabbit,兔子
+294,read,讀
+295,red,紅色
+296,restroom,廁所
+297,rice,飯
+298,robot,機器人
+299,sad,悲傷的
+300,sandwich,三明治
+301,Saturday,星期六
+302,school,學校
+303,sea,海、海洋
+304,see,看
+305,short,矮的、短的
+306,sick,生病的
+307,sing,唱
+308,skirt,裙子
+309,sleep,睡覺
+310,smell,聞、氣味
+311,snack,點心
+312,some,一些
+313,sorry,難過的、抱歉的
+314,Sunday,星期日
+315,sure,確定的
+316,safe,安全的
+317,salad,沙拉
+318,salty,鹹的
+319,same,相同的、一樣的
+320,school bag,書包
+321,season,季節
+322,shape,形狀
+323,share,分享
+324,sheep,綿羊
+325,ship,船
+326,shirt,襯衫
+327,shoe(s),鞋子
+328,shop,商店
+329,shopkeeper,店主
+330,shoulder,肩膀
+331,shy,害羞的
+332,slow,慢的
+333,smile,微笑
+334,smoke,吸煙、煙
+335,snake,蛇
+336,snowy,下雪的
+337,sock(s),短襪
+338,song,歌曲
+339,sound,聲響、聽起來
+340,south,南方、北方的、南部的
+341,speak,說話
+342,spoon,湯匙
+343,spring,春天
+344,story,故事
+345,stranger,陌生人
+346,street,街道
+347,successful,成功的
+348,sugar,糖
+349,summer,夏天
+350,supermarket,超級市場
+351,surprise,驚訝、驚喜
+352,sweater,毛衣
+353,swim,游泳
+354,Taiwan,台灣
+355,taxi,計程車
+356,Teacher's Day,教師節
+357,telephone,電話
+358,television,電視
+359,Thanksgiving,感恩節
+360,thirsty,口渴的
+361,thousand,千
+362,tomorrow,明天
+363,traffic,交通
+364,train station,火車站
+365,truck,貨車
+366,typhoon,颱風
+367,ten,十
+368,three,三
+369,Thursday,星期四
+370,tiger,老虎
+371,tired,疲倦的
+372,today,今天
+373,train,火車
+374,tree,樹
+375,Tuesday,星期二
+376,twelve,十二
+377,two,二
+378,umbrella,雨傘
+379,uniform,制服
+380,vacation,假期
+381,vegetable,蔬菜
+382,walk,走路
+383,want,想要、需要
+384,wash,清洗
+385,watch,看、手錶
+386,water,水
+387,weather,天氣
+388,Wednesday,星期三
+389,week,星期(週)
+390,weekend,週末
+391,what,什麼
+392,white,白色
+393,window,窗戶
+394,windy,多風的、有風的、風大的
+395,winter,冬天
+396,write,寫
+397,yellow,黃色
+398,yesterday,昨天
+399,young,年輕
+400,zebra,斑馬`;
+// ==========================================
+
+const ACCESSORIES = [
+    { id: 1, name: '粉紅澎澎裙', icon: '👗', svgId: 'acc-1' },
+    { id: 2, name: '閃亮皇冠', icon: '👑', svgId: 'acc-2' },
+    { id: 3, name: '緞帶舞鞋', icon: '🩰', svgId: 'acc-3' },
+    { id: 4, name: '魔法星星棒', icon: '🪄', svgId: 'acc-4' },
+    { id: 5, name: '精靈翅膀', icon: '🦋', svgId: 'acc-5' },
+    { id: 6, name: '珍珠項鍊', icon: '📿', svgId: 'acc-6' },
+    { id: 7, name: '玫瑰髮夾', icon: '🌹', svgId: 'acc-7' },
+    { id: 8, name: '閃耀耳環', icon: '✨', svgId: 'acc-8' },
+    { id: 9, name: '夢幻腿套', icon: '🧦', svgId: 'acc-9' },
+    { id: 10, name: '蝴蝶結腰帶', icon: '🎀', svgId: 'acc-10' },
+    { id: 11, name: '閃亮手環', icon: '💫', svgId: 'acc-11' },
+    { id: 12, name: '舞台聚光燈', icon: '💡', svgId: 'acc-12' },
+    { id: 13, name: '魔法星塵', icon: '🌟', svgId: 'acc-13' },
+    { id: 14, name: '花朵捧花', icon: '💐', svgId: 'acc-14' },
+    { id: 15, name: '金色腳鍊', icon: '✨', svgId: 'acc-15' },
+    { id: 16, name: '皇室披肩', icon: '🧥', svgId: 'acc-16' },
+    { id: 17, name: '可愛腮紅', icon: '😊', svgId: 'acc-17' },
+    { id: 18, name: '星星背景', icon: '🌠', svgId: 'acc-18' },
+    { id: 19, name: '舞會面具', icon: '🎭', svgId: 'acc-19' },
+    { id: 20, name: '冠軍獎盃', icon: '🏆', svgId: 'acc-20' },
+];
+
+let users = {};
+let currentUser = null;
+
+// 練習狀態
+let practiceQueue = [];
+let currentIndex = 0;
+let currentMistakes = 0;
+let usedMagic = false;
+let sessionStars = 0;
+
+// --- 初始化 ---
+window.onload = () => {
+    loadData();
+    injectDollSVG();
+    
+    // 綁定 Enter 鍵送出
+    document.getElementById('answerInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') checkAnswer();
+    });
+    document.getElementById('loginName').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') login();
+    });
+
+    showView('login');
+};
+
+// --- UI 切換邏輯 ---
+function showView(viewId) {
+    ['login', 'dashboard', 'practice', 'finish'].forEach(v => {
+        document.getElementById(`view-${v}`).classList.add('hidden');
+        document.getElementById(`view-${v}`).classList.remove('flex');
+    });
+    
+    const view = document.getElementById(`view-${viewId}`);
+    view.classList.remove('hidden');
+    if (viewId === 'dashboard' || viewId === 'practice') {
+        view.classList.add('flex'); // 回復 flex 佈局
+    }
+}
+
+function showAlert(title, message) {
+    document.getElementById('alertTitle').innerText = title;
+    document.getElementById('alertMessage').innerText = message;
+    document.getElementById('alertModal').classList.remove('hidden');
+}
+
+function closeAlert() {
+    document.getElementById('alertModal').classList.add('hidden');
+}
+
+// --- 資料處理 ---
+function parseCSVData(csvText) {
+    const lines = csvText.split('\n');
+    let parsedWords = [];
+    
+    for (let line of lines) {
+        if (!line.trim()) continue;
+        const parts = line.split(',');
+        if (parts.length >= 3) {
+            const idStr = parts[0].replace(/['"]/g, '').trim();
+            let en = parts[1].replace(/['"]/g, '').trim();
+            const zh = parts[2].replace(/['"]/g, '').trim();
+            
+            // 去除可能干擾發音或驗證的括號 (例如 shoe(s) 會自動被當作 shoe 處理)
+            en = en.replace(/\(s\)/g, '').trim();
+
+            const id = parseInt(idStr, 10);
+            if (!isNaN(id) && en && zh) {
+                parsedWords.push({ id, en, zh });
+            }
+        }
+    }
+    return parsedWords;
+}
+
+function loadData() {
+    try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (data) users = JSON.parse(data);
+    } catch (e) {
+        console.error("無法讀取 LocalStorage", e);
+    }
+}
+
+function saveData() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    } catch (e) {
+        showAlert('錯誤', '儲存空間可能不足，無法儲存進度！');
+    }
+}
+
+// --- 登入與主畫面邏輯 ---
+function login() {
+    const nameInput = document.getElementById('loginName').value.trim();
+    if (!nameInput) {
+        showAlert('Oops!', '請輸入你的名字才能開始喔！');
+        return;
+    }
+
+    // 每次登入時自動載入內建的單字庫
+    const builtInWords = parseCSVData(BUILT_IN_CSV);
+
+    if (!users[nameInput]) {
+        users[nameInput] = {
+            name: nameInput,
+            stars: 0,
+            unlockedAccessories: [], // 儲存 accessory id
+            words: builtInWords 
+        };
+        saveData();
+    } else {
+        // 自動為舊使用者更新內建單字庫
+        users[nameInput].words = builtInWords;
+        saveData();
+    }
+    
+    currentUser = users[nameInput];
+    updateDashboard();
+    showView('dashboard');
+}
+
+function logout() {
+    currentUser = null;
+    document.getElementById('loginName').value = '';
+    showView('login');
+}
+
+function updateDashboard() {
+    if (!currentUser) return;
+    document.getElementById('dashName').innerText = currentUser.name;
+    document.getElementById('dashStars').innerText = currentUser.stars;
+    document.getElementById('wordCount').innerText = currentUser.words.length;
+    document.getElementById('collectionCount').innerText = currentUser.unlockedAccessories.length;
+    
+    // 自動依照單字總數調整題號預設值防呆
+    if (currentUser.words.length > 0) {
+        const maxWord = currentUser.words.length;
+        document.getElementById('endId').max = maxWord;
+        if (parseInt(document.getElementById('endId').value) > maxWord) {
+            document.getElementById('endId').value = maxWord;
+        }
+    }
+
+    updateDollAppearance();
+}
+
+// --- 練習模式 ---
+function preparePractice() {
+    if (currentUser.words.length === 0) {
+        showAlert('等等！', '單字庫裡沒有單字，請檢查 BUILT_IN_CSV 喔！');
+        return;
+    }
+
+    const sId = parseInt(document.getElementById('startId').value, 10);
+    const eId = parseInt(document.getElementById('endId').value, 10);
+
+    if (isNaN(sId) || isNaN(eId) || sId > eId) {
+        showAlert('格式錯誤', '請輸入正確的編號範圍！');
+        return;
+    }
+
+    practiceQueue = currentUser.words.filter(w => w.id >= sId && w.id <= eId);
+
+    if (practiceQueue.length === 0) {
+        showAlert('找不到單字', `範圍 ${sId} 到 ${eId} 中沒有找到單字！`);
+        return;
+    }
+
+    // 準備進入練習
+    sessionStars = 0;
+    currentIndex = 0;
+    document.getElementById('practiceStars').innerText = currentUser.stars;
+    
+    // 複製娃娃到迷你區
+    const miniContainer = document.getElementById('miniDollContainer');
+    miniContainer.innerHTML = document.getElementById('svgDollContainer').innerHTML;
+
+    showView('practice');
+    loadWord();
+}
+
+function loadWord() {
+    if (currentIndex >= practiceQueue.length) {
+        finishPractice();
+        return;
+    }
+
+    const word = practiceQueue[currentIndex];
+    currentMistakes = 0;
+    usedMagic = false;
+    
+    document.getElementById('practiceProgress').innerText = `第 ${currentIndex + 1} / ${practiceQueue.length} 題`;
+    document.getElementById('questionChinese').innerText = word.zh;
+    document.getElementById('hintMessage').innerText = '';
+    
+    const input = document.getElementById('answerInput');
+    input.value = '';
+    input.focus();
+
+    // 更新魔法按鈕狀態
+    document.getElementById('magicBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+    document.getElementById('magicBtn').disabled = false;
+
+    // 自動發音
+    playCurrentWord();
+}
+
+function playCurrentWord() {
+    const word = practiceQueue[currentIndex].en;
+    if ('speechSynthesis' in window) {
+        // 先取消前一個發音
+        speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9; // 放慢一點適合小孩
+        // 嘗試使用較好聽的女聲，若無則預設
+        const voices = speechSynthesis.getVoices();
+        const femaleVoice = voices.find(v => v.lang.includes('en') && (v.name.includes('Female') || v.name.includes('Samantha')));
+        if (femaleVoice) utterance.voice = femaleVoice;
+        
+        speechSynthesis.speak(utterance);
+    }
+}
+
+function checkAnswer() {
+    const inputField = document.getElementById('answerInput');
+    const inputStr = inputField.value.trim().toLowerCase();
+    const word = practiceQueue[currentIndex];
+    const correctAns = word.en.trim().toLowerCase();
+
+    if (inputStr === correctAns) {
+        // 答對了
+        handleCorrectAnswer();
+    } else {
+        // 答錯了
+        currentMistakes++;
+        inputField.value = ''; // 清空讓小孩重拼
+        inputField.focus();
+        
+        let hintText = "";
+        if (usedMagic) {
+            hintText = `請照著拼寫：${word.en}`;
+        } else {
+            // 第一次錯顯示首字母，其餘底線
+            const firstLetter = word.en.charAt(0);
+            const blanks = " _".repeat(word.en.length - 1);
+            hintText = currentMistakes === 1 
+                ? `提示：${firstLetter}${blanks}` 
+                : `再試一次喔！提示：${firstLetter}${blanks}`;
+        }
+        
+        document.getElementById('hintMessage').innerText = hintText;
+        document.getElementById('hintMessage').classList.remove('text-green-500');
+        document.getElementById('hintMessage').classList.add('text-red-500');
+    }
+}
+
+function handleCorrectAnswer() {
+    document.getElementById('hintMessage').innerText = "太棒了！答對囉！✨";
+    document.getElementById('hintMessage').classList.remove('text-red-500');
+    document.getElementById('hintMessage').classList.add('text-green-500');
+    
+    if (!usedMagic) {
+        gainStar();
+    }
+
+    // 延遲一下跳下一題
+    setTimeout(() => {
+        currentIndex++;
+        loadWord();
+    }, 1000);
+}
+
+function useMagic() {
+    if (usedMagic) return; // 避免重複點擊
+    usedMagic = true;
+    const word = practiceQueue[currentIndex];
+    
+    document.getElementById('hintMessage').innerText = `答案是：${word.en} (請親自拼寫一次喔)`;
+    document.getElementById('hintMessage').classList.remove('text-red-500');
+    document.getElementById('hintMessage').classList.add('text-purple-600');
+    
+    // 禁用魔法按鈕
+    const btn = document.getElementById('magicBtn');
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
+    btn.disabled = true;
+
+    document.getElementById('answerInput').focus();
+}
+
+function gainStar() {
+    currentUser.stars++;
+    sessionStars++;
+    document.getElementById('practiceStars').innerText = currentUser.stars;
+    
+    // 飛行動畫特效
+    const starFly = document.createElement('div');
+    starFly.className = 'star-fly';
+    starFly.innerText = '⭐';
+    // 定位在畫面中間
+    starFly.style.left = '50%';
+    starFly.style.top = '50%';
+    document.body.appendChild(starFly);
+    setTimeout(() => starFly.remove(), 1000);
+
+    saveData();
+
+    // 檢查是否達到 20 顆星解鎖配件
+    const expectedAccessories = Math.floor(currentUser.stars / 20);
+    if (expectedAccessories > currentUser.unlockedAccessories.length && currentUser.unlockedAccessories.length < 20) {
+        unlockNextAccessory();
+    }
+}
+
+function unlockNextAccessory() {
+    // 找出還沒解鎖的最小 ID
+    let nextId = -1;
+    for (let item of ACCESSORIES) {
+        if (!currentUser.unlockedAccessories.includes(item.id)) {
+            nextId = item.id;
+            break;
+        }
+    }
+
+    if (nextId !== -1) {
+        currentUser.unlockedAccessories.push(nextId);
+        saveData();
+        
+        // 暫停練習，顯示解鎖動畫
+        const itemObj = ACCESSORIES.find(a => a.id === nextId);
+        document.getElementById('unlockedItemName').innerText = `${itemObj.icon} ${itemObj.name}`;
+        document.getElementById('unlockModal').classList.remove('hidden');
+        
+        // 更新娃娃外觀（同時更新主娃娃與迷你娃娃）
+        updateDollAppearance();
+        const miniContainer = document.getElementById('miniDollContainer');
+        miniContainer.innerHTML = document.getElementById('svgDollContainer').innerHTML;
+    }
+}
+
+function closeUnlockModal() {
+    document.getElementById('unlockModal').classList.add('hidden');
+    document.getElementById('answerInput').focus();
+}
+
+function exitPractice() {
+    if(confirm('確定要退出練習嗎？目前的星星會保留喔！')) {
+        returnToDashboard();
+    }
+}
+
+function finishPractice() {
+    document.getElementById('finishStars').innerText = sessionStars;
+    showView('finish');
+}
+
+function returnToDashboard() {
+    updateDashboard();
+    showView('dashboard');
+}
+
+// --- 芭蕾娃娃 SVG 繪製與狀態管理 ---
+
+function injectDollSVG() {
+    // 利用 SVG 打造可愛芭蕾娃娃基底
+    const svgHTML = `
+    <svg viewBox="0 0 400 500" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#fff" stop-opacity="0.8"/>
+                <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+            </radialGradient>
+        </defs>
+
+        <!-- 舞台/背景配件 (在最底層) -->
+        <g id="acc-18" class="acc"><circle cx="200" cy="250" r="180" fill="url(#glow)"/><text x="50" y="100" font-size="30">✨</text><text x="320" y="150" font-size="40">⭐</text><text x="80" y="350" font-size="30">🌠</text></g>
+        <g id="acc-12" class="acc"><polygon points="150,0 250,0 350,500 50,500" fill="#ffff00" opacity="0.15"/></g>
+
+        <!-- 影子 -->
+        <ellipse cx="200" cy="460" rx="100" ry="15" fill="#e5e7eb" />
+
+        <!-- 身體後方配件 -->
+        <g id="acc-16" class="acc"><!-- 披肩 --><path d="M 140 180 Q 80 300 120 400 L 280 400 Q 320 300 260 180 Z" fill="#fbcfe8" opacity="0.8"/></g>
+        <g id="acc-5" class="acc"><!-- 翅膀 --><path d="M 180 200 Q 60 120 80 280 Q 140 280 180 230 Z" fill="#bae6fd" opacity="0.8"/><path d="M 220 200 Q 340 120 320 280 Q 260 280 220 230 Z" fill="#bae6fd" opacity="0.8"/></g>
+
+        <!-- 娃娃主體 -->
+        <g id="base-doll">
+            <!-- 腿 -->
+            <line x1="185" y1="310" x2="175" y2="430" stroke="#ffdcb3" stroke-width="20" stroke-linecap="round"/>
+            <line x1="215" y1="310" x2="225" y2="430" stroke="#ffdcb3" stroke-width="20" stroke-linecap="round"/>
+            
+            <!-- 身體(白色舞衣底) -->
+            <path d="M 160 200 L 240 200 L 225 320 L 175 320 Z" fill="#ffffff" stroke="#f3f4f6" stroke-width="2"/>
+            
+            <!-- 脖子 -->
+            <rect x="190" y="150" width="20" height="30" fill="#ffdcb3" />
+
+            <!-- 手臂 (芭蕾姿勢向上彎) -->
+            <path d="M 160 210 Q 100 120 140 60" fill="none" stroke="#ffdcb3" stroke-width="16" stroke-linecap="round"/>
+            <path d="M 240 210 Q 300 120 260 60" fill="none" stroke="#ffdcb3" stroke-width="16" stroke-linecap="round"/>
+
+            <!-- 頭部 -->
+            <circle cx="200" cy="120" r="50" fill="#ffdcb3"/>
+            <!-- 眼睛 -->
+            <circle cx="180" cy="120" r="6" fill="#4b5563"/>
+            <circle cx="220" cy="120" r="6" fill="#4b5563"/>
+            <circle cx="182" cy="118" r="2" fill="#fff"/>
+            <circle cx="222" cy="118" r="2" fill="#fff"/>
+            <!-- 嘴巴 -->
+            <path d="M 190 135 Q 200 145 210 135" fill="none" stroke="#db2777" stroke-width="3" stroke-linecap="round"/>
+            <!-- 頭髮 (棕色包包頭) -->
+            <circle cx="200" cy="60" r="25" fill="#78350f"/>
+            <path d="M 150 120 A 50 50 0 0 1 250 120 Q 250 80 200 80 Q 150 80 150 120 Z" fill="#78350f"/>
+        </g>
+
+        <!-- 身體前方配件 -->
+        <g id="acc-17" class="acc"><!-- 腮紅 --><circle cx="170" cy="130" r="8" fill="#fca5a5" opacity="0.6"/><circle cx="230" cy="130" r="8" fill="#fca5a5" opacity="0.6"/></g>
+        <g id="acc-19" class="acc"><!-- 面具 --><path d="M 165 115 Q 200 130 235 115 Q 240 100 200 105 Q 160 100 165 115 Z" fill="#a855f7" opacity="0.9"/></g>
+        <g id="acc-6" class="acc"><!-- 項鍊 --><path d="M 185 165 Q 200 180 215 165" fill="none" stroke="#ffffff" stroke-width="4" stroke-dasharray="4,4"/></g>
+        <g id="acc-1" class="acc"><!-- 澎澎裙 --><path d="M 130 300 Q 200 240 270 300 Q 290 340 200 330 Q 110 340 130 300 Z" fill="#f472b6" opacity="0.85" stroke="#db2777" stroke-width="2"/></g>
+        <g id="acc-10" class="acc"><!-- 腰帶 --><rect x="175" y="280" width="50" height="10" fill="#ec4899"/><circle cx="200" cy="285" r="10" fill="#be185d"/></g>
+        
+        <g id="acc-9" class="acc"><!-- 腿套 --><rect x="165" y="380" width="20" height="30" rx="5" fill="#fbcfe8"/><rect x="215" y="380" width="20" height="30" rx="5" fill="#fbcfe8"/></g>
+        <g id="acc-3" class="acc"><!-- 舞鞋 --><path d="M 165 425 L 185 425 L 180 445 L 170 445 Z" fill="#db2777"/><path d="M 215 425 L 235 425 L 230 445 L 220 445 Z" fill="#db2777"/><path d="M 165 410 L 185 430 M 185 410 L 165 430" stroke="#db2777" stroke-width="2"/><path d="M 215 410 L 235 430 M 235 410 L 215 430" stroke="#db2777" stroke-width="2"/></g>
+        <g id="acc-15" class="acc"><!-- 腳鍊 --><line x1="215" y1="420" x2="235" y2="420" stroke="#fbbf24" stroke-width="4"/></g>
+
+        <g id="acc-2" class="acc"><!-- 皇冠 --><path d="M 180 60 L 185 30 L 200 50 L 215 30 L 220 60 Z" fill="#fbbf24"/></g>
+        <g id="acc-7" class="acc"><!-- 髮夾 --><circle cx="230" cy="90" r="8" fill="#e11d48"/></g>
+        <g id="acc-8" class="acc"><!-- 耳環 --><circle cx="160" cy="135" r="3" fill="#fbbf24"/><circle cx="240" cy="135" r="3" fill="#fbbf24"/></g>
+        
+        <g id="acc-11" class="acc"><!-- 手環 --><line x1="120" y1="80" x2="135" y2="90" stroke="#fbbf24" stroke-width="5"/></g>
+        
+        <g id="acc-4" class="acc"><!-- 魔法棒 (拿在左手) --><line x1="135" y1="60" x2="90" y2="20" stroke="#fcd34d" stroke-width="4"/><polygon points="90,5 95,15 105,15 97,22 100,32 90,25 80,32 83,22 75,15 85,15" fill="#fbbf24"/></g>
+        
+        <g id="acc-14" class="acc"><!-- 捧花 (拿在右手) --><circle cx="265" cy="60" r="15" fill="#22c55e"/><circle cx="260" cy="50" r="8" fill="#f43f5e"/><circle cx="275" cy="55" r="8" fill="#d946ef"/><circle cx="265" cy="70" r="8" fill="#eab308"/></g>
+        
+        <g id="acc-13" class="acc"><!-- 星塵 --><text x="120" y="160" font-size="20">✨</text><text x="260" y="250" font-size="20">✨</text><text x="100" y="280" font-size="20">✨</text></g>
+        <g id="acc-20" class="acc"><!-- 獎盃 --><path d="M 280 430 L 320 430 L 310 460 L 290 460 Z" fill="#f59e0b"/><rect x="290" y="460" width="20" height="5" fill="#b45309"/><path d="M 270 430 L 280 430 L 280 445 L 270 445 Z" fill="#fbbf24"/><path d="M 320 430 L 330 430 L 330 445 L 320 445 Z" fill="#fbbf24"/></g>
+    </svg>
+    `;
+    document.getElementById('svgDollContainer').innerHTML = svgHTML;
+}
+
+function updateDollAppearance() {
+    // 隱藏所有配件
+    document.querySelectorAll('.acc').forEach(el => el.classList.remove('active'));
+    
+    // 顯示已解鎖的配件
+    if (currentUser && currentUser.unlockedAccessories) {
+        currentUser.unlockedAccessories.forEach(id => {
+            const accObj = ACCESSORIES.find(a => a.id === id);
+            if (accObj) {
+                // 處理主畫面娃娃與迷你娃娃的同步
+                const els = document.querySelectorAll(`#${accObj.svgId}`);
+                els.forEach(el => el.classList.add('active'));
+            }
+        });
+    }
+}
+
+// --- 收藏櫃 UI ---
+function showCollectionRoom() {
+    const grid = document.getElementById('collectionGrid');
+    grid.innerHTML = '';
+    
+    ACCESSORIES.forEach(item => {
+        const isUnlocked = currentUser.unlockedAccessories.includes(item.id);
+        
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-2xl flex flex-col items-center justify-center text-center transition-transform transform hover:scale-105 border-4 ${isUnlocked ? 'bg-white border-pink-300 shadow-lg' : 'bg-gray-100 border-gray-200 opacity-70'}`;
+        
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'text-5xl mb-2';
+        iconDiv.innerText = isUnlocked ? item.icon : '❓';
+        
+        const nameDiv = document.createElement('div');
+        nameDiv.className = `font-bold text-sm ${isUnlocked ? 'text-pink-600' : 'text-gray-400'}`;
+        nameDiv.innerText = isUnlocked ? item.name : `${item.id * 20} 顆星解鎖`;
+        
+        card.appendChild(iconDiv);
+        card.appendChild(nameDiv);
+        grid.appendChild(card);
+    });
+    
+    document.getElementById('collectionModal').classList.remove('hidden');
+    document.getElementById('collectionModal').classList.add('flex');
+}
+
+function closeCollectionRoom() {
+    document.getElementById('collectionModal').classList.add('hidden');
+    document.getElementById('collectionModal').classList.remove('flex');
+}
+
+// 初始化語音以避免第一次播放延遲 (Chrome policy)
+document.addEventListener('click', function initSpeech() {
+    if ('speechSynthesis' in window) {
+        const u = new SpeechSynthesisUtterance('');
+        u.volume = 0;
+        speechSynthesis.speak(u);
+    }
+    document.removeEventListener('click', initSpeech);
+}, { once: true });
+
+</script>
+</body>
+</html>
