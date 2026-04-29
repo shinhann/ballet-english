@@ -111,6 +111,14 @@
                 <input type="text" id="loginName" class="w-full text-center text-2xl p-4 border-4 border-pink-200 rounded-2xl focus:outline-none focus:border-pink-500 transition" placeholder="例如：小美">
             </div>
             <button onclick="login()" class="btn-primary w-full text-white font-black text-2xl py-4 rounded-full mt-4">開始遊戲！</button>
+
+            <!-- 現有玩家清單 -->
+            <div id="existingUsersContainer" class="hidden mt-6 pt-6 border-t-2 border-pink-100">
+                <label class="block text-lg font-bold text-gray-500 mb-3">或選擇之前的玩家：</label>
+                <div id="existingUsersList" class="flex flex-wrap justify-center gap-3">
+                    <!-- 動態產生按鈕 -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -263,8 +271,6 @@ const STORAGE_KEY = 'ballet_dictation_users';
 
 // ==========================================
 // 🚨 單字庫修改區 🚨
-// 請將你準備好的 400 個單字覆蓋到這裡面。
-// 注意：不要刪掉最前方的反引號 (`) 和最後方的反引號 (`)！
 // ==========================================
 const BUILT_IN_CSV = `編號,英文單字,中文解釋
 1,afraid,害怕的
@@ -706,11 +712,13 @@ let sessionStars = 0;
 window.onload = () => {
     loadData();
     injectDollSVG();
+    renderExistingUsers(); // 渲染現有玩家列表
     
     // 綁定 Enter 鍵送出
     document.getElementById('answerInput').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') checkAnswer();
     });
+    // 輸入框按 Enter 登入
     document.getElementById('loginName').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') login();
     });
@@ -784,9 +792,32 @@ function saveData() {
     }
 }
 
+// 渲染現有玩家列表
+function renderExistingUsers() {
+    const container = document.getElementById('existingUsersContainer');
+    const list = document.getElementById('existingUsersList');
+    list.innerHTML = '';
+
+    const userNames = Object.keys(users);
+    if (userNames.length > 0) {
+        container.classList.remove('hidden');
+        userNames.forEach(name => {
+            const btn = document.createElement('button');
+            btn.className = 'bg-pink-100 hover:bg-pink-200 text-pink-700 font-bold py-2 px-6 rounded-full border-2 border-pink-300 transition transform hover:scale-105 shadow-sm';
+            btn.innerText = name;
+            btn.onclick = () => login(name);
+            list.appendChild(btn);
+        });
+    } else {
+        container.classList.add('hidden');
+    }
+}
+
 // --- 登入與主畫面邏輯 ---
-function login() {
-    const nameInput = document.getElementById('loginName').value.trim();
+function login(forcedName) {
+    // 判斷是從按鈕直接傳名字進來，還是從輸入框讀取
+    const nameInput = typeof forcedName === 'string' ? forcedName : document.getElementById('loginName').value.trim();
+    
     if (!nameInput) {
         showAlert('Oops!', '請輸入你的名字才能開始喔！');
         return;
@@ -810,6 +841,7 @@ function login() {
     }
     
     currentUser = users[nameInput];
+    document.getElementById('loginName').value = ''; // 清空輸入框
     updateDashboard();
     showView('dashboard');
 }
@@ -817,6 +849,7 @@ function login() {
 function logout() {
     currentUser = null;
     document.getElementById('loginName').value = '';
+    renderExistingUsers(); // 登出時重新整理一次名單，確保剛新增的玩家也在上面
     showView('login');
 }
 
