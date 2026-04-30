@@ -707,6 +707,7 @@ let currentIndex = 0;
 let currentMistakes = 0;
 let usedMagic = false;
 let sessionStars = 0;
+let isTransitioning = false; // 新增：防止重複送出的防呆鎖
 
 // --- 初始化 ---
 window.onload = () => {
@@ -916,6 +917,7 @@ function loadWord() {
     const word = practiceQueue[currentIndex];
     currentMistakes = 0;
     usedMagic = false;
+    isTransitioning = false; // 新增：準備好新題目後，解除鎖定
     
     document.getElementById('practiceProgress').innerText = `第 ${currentIndex + 1} / ${practiceQueue.length} 題`;
     document.getElementById('questionChinese').innerText = word.zh;
@@ -951,6 +953,8 @@ function playCurrentWord() {
 }
 
 function checkAnswer() {
+    if (isTransitioning) return; // 新增：如果已經答對正在等下一題，直接忽略後續輸入
+
     const inputField = document.getElementById('answerInput');
     const inputStr = inputField.value.trim().toLowerCase();
     const word = practiceQueue[currentIndex];
@@ -984,6 +988,8 @@ function checkAnswer() {
 }
 
 function handleCorrectAnswer() {
+    isTransitioning = true; // 新增：答對後馬上「上鎖」，防止在這1秒延遲內被重複觸發
+    
     document.getElementById('hintMessage').innerText = "太棒了！答對囉！✨";
     document.getElementById('hintMessage').classList.remove('text-red-500');
     document.getElementById('hintMessage').classList.add('text-green-500');
